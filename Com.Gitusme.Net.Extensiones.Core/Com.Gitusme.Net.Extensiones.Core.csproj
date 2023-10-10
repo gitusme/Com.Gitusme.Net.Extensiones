@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>1.0.2</Version>
+    <Title>Com.Gitusme.Net.Extensiones.Core</Title>
+    <Authors>gitusme</Authors>
+    <Description>Com.Gitusme.Net.Extensiones.Core is a .NET extension library. It has a wealth of APIs that reduce the amount of code and improve your programming efficiency.</Description>
+    <Copyright>Copyright @ gitusme 2023</Copyright>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+    <PackAsTool>False</PackAsTool>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include=".nuget\Com.Gitusme.Net.Extensiones.Core.nuspec" />
+    <None Include=".nuget\nuget.exe" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="7.0.3" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if exist &quot;$(ProjectDir)$(PublishDir)$(AssemblyName).$(Version).nupkg&quot; (&#xD;&#xA;cd .nuget &#xD;&#xA;nuget push $(ProjectDir)$(PublishDir)$(AssemblyName).$(Version).nupkg -Source https://www.nuget.org&#xD;&#xA;xcopy /F/Y $(ProjectDir)$(PublishDir)$(AssemblyName).$(Version).nupkg $(ProjectDir).nuget\$(AssemblyName).$(Version).nupkg&#xD;&#xA;del $(ProjectDir)$(PublishDir)$(AssemblyName).$(Version).nupkg&#xD;&#xA;cd ..&#xD;&#xA;) else (&#xD;&#xA;echo WARNING: No publish found&#xD;&#xA;)" />
+  </Target>
+
+</Project>
