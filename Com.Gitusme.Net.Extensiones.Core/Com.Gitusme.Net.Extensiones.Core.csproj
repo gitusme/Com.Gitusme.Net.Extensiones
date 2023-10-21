@@ -1,15 +1,16 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Title>Com.Gitusme.Net.Extensiones.Core</Title>
     <Authors>gitusme</Authors>
     <Description>Com.Gitusme.Net.Extensiones.Core is a .NET extension library. It has a wealth of APIs that reduce the amount of code and improve your programming efficiency.</Description>
     <Copyright>Copyright @ gitusme 2023</Copyright>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
     <PackAsTool>False</PackAsTool>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

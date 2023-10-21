@@ -1,1 +1,7 @@
 /Com.Gitusme.Net.Extensiones.Core/.nuget
+/.vs
+/Com.Gitusme.Net.Extensiones.Core/.vs
+/Demos/bin
+/Demos/obj
+/Com.Gitusme.Net.Extensiones.Core/obj
+/Com.Gitusme.Net.Extensiones.Core/bin
