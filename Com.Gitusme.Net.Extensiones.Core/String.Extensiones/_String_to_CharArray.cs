@@ -6,7 +6,6 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
 namespace Com.Gitusme.Net.Extensiones.Core
@@ -17,31 +16,32 @@ namespace Com.Gitusme.Net.Extensiones.Core
     public static partial class _String
     {
         /// <summary>
-        /// 校验是否为空
+        /// 将string转换为byte[]
         /// </summary>
         /// <param name="this"></param>
         /// <returns></returns>
-        public static bool IsNullOrEmpty(this string @this)
+        public static byte[] ToCharArray(this string @this)
         {
-            return string.IsNullOrEmpty(@this);
+            return ToCharArray(@this, new byte[0]);
         }
 
         /// <summary>
-        /// 正则匹配
+        /// 将string转换为byte[]
         /// </summary>
         /// <param name="this"></param>
-        /// <param name="regex"></param>
+        /// <param name="default"></param>
         /// <returns></returns>
-        public static bool IsMatch(this string @this, string regex)
+        public static byte[] ToCharArray(this string @this, byte[] @default)
         {
             try
             {
-                return Regex.IsMatch(@this, regex);
+                return Convert.FromBase64String(@this);
             }
             catch
             {
-                return false;
+                return @default;
             }
         }
+
     }
 }

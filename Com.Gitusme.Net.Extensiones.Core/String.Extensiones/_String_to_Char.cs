@@ -6,7 +6,6 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
 namespace Com.Gitusme.Net.Extensiones.Core
@@ -17,30 +16,37 @@ namespace Com.Gitusme.Net.Extensiones.Core
     public static partial class _String
     {
         /// <summary>
-        /// 校验是否为空
+        /// 将string转换为char
         /// </summary>
         /// <param name="this"></param>
         /// <returns></returns>
-        public static bool IsNullOrEmpty(this string @this)
-        {
-            return string.IsNullOrEmpty(@this);
-        }
-
-        /// <summary>
-        /// 正则匹配
-        /// </summary>
-        /// <param name="this"></param>
-        /// <param name="regex"></param>
-        /// <returns></returns>
-        public static bool IsMatch(this string @this, string regex)
+        public static char? ToChar(this string @this)
         {
             try
             {
-                return Regex.IsMatch(@this, regex);
+                return Convert.ToChar(@this);
             }
             catch
             {
-                return false;
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 将string转换为char
+        /// </summary>
+        /// <param name="this"></param>
+        /// <param name="provider"></param>
+        /// <returns></returns>
+        public static char? ToChar(this string @this, IFormatProvider provider)
+        {
+            try
+            {
+                return Convert.ToChar(@this, provider);
+            }
+            catch
+            {
+                return null;
             }
         }
     }

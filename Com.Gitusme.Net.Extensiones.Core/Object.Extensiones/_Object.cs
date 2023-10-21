@@ -27,17 +27,6 @@ namespace Com.Gitusme.Net.Extensiones.Core
         }
 
         /// <summary>
-        /// 判断对象是否不为null
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="this"></param>
-        /// <returns></returns>
-        public static bool IsNotNull<T>(this T @this) where T : class
-        {
-            return !IsNull(@this);
-        }
-
-        /// <summary>
         /// 如果对象有值，则执行传入Action行为
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -45,7 +34,7 @@ namespace Com.Gitusme.Net.Extensiones.Core
         /// <param name="then"></param>
         public static void IfPresent<T>(this T @this, Action<T> then) where T : class
         {
-            if (IsNotNull(@this))
+            if (!IsNull(@this))
             {
                 then?.Invoke(@this);
             }
@@ -58,7 +47,7 @@ namespace Com.Gitusme.Net.Extensiones.Core
         /// <param name="this"></param>
         /// <param name="default"></param>
         /// <returns></returns>
-        public static T OrDefault<T>(this T @this, T @default)
+        public static T OrDefault<T>(this T @this, T @default) where T : class
         {
             return @this != null ? @this : @default;
         }
