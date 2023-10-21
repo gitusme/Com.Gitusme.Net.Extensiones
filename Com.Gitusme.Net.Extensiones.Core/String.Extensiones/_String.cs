@@ -10,6 +10,9 @@ using System.Xml.Serialization;
 
 namespace Com.Gitusme.Net.Extensiones.Core
 {
+    /// <summary>
+    /// String¿©’π
+    /// </summary>
     public static class _String
     {
         //
