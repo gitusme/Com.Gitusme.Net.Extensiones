@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <Title>Com.Gitusme.Net.Extensiones.Core</Title>
     <Authors>gitusme</Authors>
     <Description>Com.Gitusme.Net.Extensiones.Core is a .NET extension library. It has a wealth of APIs that reduce the amount of code and improve your programming efficiency.</Description>
@@ -11,6 +11,7 @@
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
     <PackAsTool>False</PackAsTool>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +21,10 @@
 
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="7.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Http.Extensiones\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

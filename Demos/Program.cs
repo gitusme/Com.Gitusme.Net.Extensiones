@@ -9,3 +9,7 @@ objectExensiones.Execute();
 // String Exensiones Demo
 IExtensionesDemo stringExensiones = new StringExtensionesDemo();
 stringExensiones.Execute();
+
+// Logger Demo
+IExtensionesDemo loggerDemo = new LoggerDemo();
+loggerDemo.Execute();
