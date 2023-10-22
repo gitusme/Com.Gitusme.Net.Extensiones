@@ -18,7 +18,7 @@ namespace Com.Gitusme.Net.Extensiones.Demos
             MyObject obj = null;
             if (obj.IsNull())
             {
-                System.Console.WriteLine("Example 1 输出结果:" + obj);
+                System.Console.WriteLine("Example 1 输出结果:" + "null");
             }
 
             // Example 2: 对象为null的时候，返回传入的默认值

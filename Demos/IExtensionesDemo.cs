@@ -18,7 +18,7 @@ namespace Com.Gitusme.Net.Extensiones.Demos
 
         public virtual void Execute()
         {
-            System.Console.WriteLine("========== " + Name + " ==========");
+            System.Console.WriteLine("\r\n========== " + Name + " ==========");
         }
     }
 }
