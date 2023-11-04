@@ -23,10 +23,6 @@
     <PackageReference Include="System.Text.Json" Version="7.0.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Http.Extensiones\" />
-  </ItemGroup>
-
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="if exist &quot;$(ProjectDir)$(PublishDir)$(AssemblyName).$(Version).nupkg&quot; (&#xD;&#xA;cd .nuget &#xD;&#xA;nuget push $(ProjectDir)$(PublishDir)$(AssemblyName).$(Version).nupkg -Source https://www.nuget.org&#xD;&#xA;xcopy /F/Y $(ProjectDir)$(PublishDir)$(AssemblyName).$(Version).nupkg $(ProjectDir).nuget\$(AssemblyName).$(Version).nupkg&#xD;&#xA;del $(ProjectDir)$(PublishDir)$(AssemblyName).$(Version).nupkg&#xD;&#xA;cd ..&#xD;&#xA;) else (&#xD;&#xA;echo WARNING: No publish found&#xD;&#xA;)" />
   </Target>

@@ -2,6 +2,7 @@
  * Copyright (c) 2023-2023 gitusme, All rights reserved.
  *********************************************************/
 
+using Com.Gitusme.Net.Extensiones.Core.Config;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -50,7 +51,7 @@ namespace Com.Gitusme.Net.Extensiones.Core.Logging
 
         private Logger()
         {
-            Init(new LogSettings());
+            Init(Settings.Load().LogSettings);
         }
 
 

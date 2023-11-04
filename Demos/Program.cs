@@ -13,3 +13,7 @@ stringExensiones.Execute();
 // Logger Demo
 IExtensionesDemo loggerDemo = new LoggerDemo();
 loggerDemo.Execute();
+
+// Socket Demo
+IExtensionesDemo socketDemo = new SocketDemo();
+socketDemo.Execute();
