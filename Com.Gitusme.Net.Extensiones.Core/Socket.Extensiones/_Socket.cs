@@ -39,14 +39,14 @@ namespace Com.Gitusme.Net.Extensiones.Core
         public static ICommandResult Send(this Socket @this, ICommand command)
         {
             @this.Send(SocketSettings.Default.Encoding.GetBytes(command.GetCommand()));
-            byte[] bytes = @this.ReadBytes();
+            byte[] bytes = @this.ReceiveBytes();
             ICommandResult commandResult = command.GetResultParser().Parse(bytes);
             return commandResult;
         }
 
         public static ICommand Receive(this Socket @this, CommandFilter commandFilter)
         {
-            byte[] bytes = ReadBytes(@this);
+            byte[] bytes = ReceiveBytes(@this);
             string cmd = SocketSettings.Default.Encoding.GetString(bytes);
             ICommand command = commandFilter.Filter(cmd);
             if (command.IsNull())
@@ -56,7 +56,7 @@ namespace Com.Gitusme.Net.Extensiones.Core
             return command;
         }
 
-        private static byte[] ReadBytes(this Socket @this)
+        private static byte[] ReceiveBytes(this Socket @this)
         {
             string data = String.Empty;
             byte[] bytes = new byte[SocketSettings.Default.BufferSize];

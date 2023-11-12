@@ -33,16 +33,16 @@ namespace Com.Gitusme.Net.Extensiones.Demos
                 string tag = $"{clientId}]";
 
                 CommandExecutor executor = new CommandExecutor(client);
-                while (true)
-                {
-                    ICommandResult ack = executor.Execute(new ACK());
-                    Console.WriteLine($"[{tag}] Command Result: {SocketSettings.Default.Encoding.GetString(ack.Get())}");
 
-                    ICommandResult eom = executor.Execute(new EOM());
-                    Console.WriteLine($"[{tag}] Command Result: {SocketSettings.Default.Encoding.GetString(eom.Get())}");
+                ICommandResult ack = executor.Execute(new ACK());
+                string ackResult = SocketSettings.Default.Encoding.GetString(ack.Get());
 
-                    Thread.Sleep(1000);
-                }
+                Console.WriteLine($"[{tag}] Command Result: {ackResult}");
+
+                ICommandResult eom = executor.Execute(new EOM());
+                string eomResult = SocketSettings.Default.Encoding.GetString(eom.Get());
+
+                Console.WriteLine($"[{tag}] Command Result: {eomResult}");
 
             });
             clientThread.Start($"CLIENT");
