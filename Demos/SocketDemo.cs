@@ -116,14 +116,22 @@ namespace Com.Gitusme.Net.Extensiones.Demos
 
                 while (true)
                 {
-                    CommandReceiver receiver = new CommandReceiver(acceptHandler);
-                    ICommand command = receiver.Receive();
-                    Console.WriteLine("Server received: {0}", command.GetCommand());
+                    try
+                    {
+                        CommandReceiver receiver = new CommandReceiver(acceptHandler);
+                        ICommand command = receiver.Receive();
+                        Console.WriteLine("Server received: {0}", command.GetCommand());
 
-                    string msg = $"{command.GetCommand()}, SUCCESS";
-                    ICommandResult result = command.GetResultParser().Parse(
-                        SocketSettings.Default.Encoding.GetBytes(msg));
-                    acceptHandler.Send(result.Get());
+                        string msg = $"{command.GetCommand()}, SUCCESS";
+                        ICommandResult result = command.GetResultParser().Parse(
+                            SocketSettings.Default.Encoding.GetBytes(msg));
+                        acceptHandler.Send(result.Get());
+                    }
+                    catch (NotSupportedException e)
+                    {
+                        string msg = e.Message;
+                        acceptHandler.Send(SocketSettings.Default.Encoding.GetBytes(msg));
+                    }
 
                     Thread.Sleep(1000);
                 }

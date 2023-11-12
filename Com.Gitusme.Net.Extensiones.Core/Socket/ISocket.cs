@@ -11,6 +11,8 @@ namespace Com.Gitusme.Net.Extensiones.Core
 {
     public interface ISocketHandler
     {
+        void SetCommandFactory(CommandFactory factory);
+
         void Open();
 
         void Close();
@@ -35,9 +37,11 @@ namespace Com.Gitusme.Net.Extensiones.Core
     {
         internal protected byte[] _buffer = new byte[1024];
 
+        internal protected ISocketListener _socketListener;
         internal protected Socket _socket;
         internal protected EndPoint _endPoint;
-        internal protected ISocketListener _socketListener;
+        internal protected CommandFactory _commandFactory;
+        internal protected CommandFilter _commandFilter;
 
         public SocketHandler(
             ISocketListener socketListener, Socket socket, EndPoint endPoint)
@@ -45,6 +49,8 @@ namespace Com.Gitusme.Net.Extensiones.Core
             this._socketListener = socketListener;
             this._socket = socket;
             this._endPoint = endPoint;
+            this._commandFactory = new DefaultCommandFactory();
+            this._commandFilter = new CommandFilter(this._commandFactory);
 
             try
             {
@@ -54,6 +60,12 @@ namespace Com.Gitusme.Net.Extensiones.Core
             {
                 this._socketListener?.OnError(e);
             }
+        }
+
+        public virtual void SetCommandFactory(CommandFactory commandFactory)
+        {
+            this._commandFactory = commandFactory.OrDefault(new DefaultCommandFactory());
+            this._commandFilter = new CommandFilter(commandFactory);
         }
 
         public virtual void Open()
@@ -93,7 +105,7 @@ namespace Com.Gitusme.Net.Extensiones.Core
             return HandleSendEvent(() =>
             {
                 return InvokeAction(
-                    () => { return this._socket.Receive(); });
+                    () => { return this._socket.Receive(this._commandFilter); });
             });
         }
 

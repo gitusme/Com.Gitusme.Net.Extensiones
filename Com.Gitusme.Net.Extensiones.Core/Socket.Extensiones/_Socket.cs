@@ -44,22 +44,16 @@ namespace Com.Gitusme.Net.Extensiones.Core
             return commandResult;
         }
 
-        public static ICommand Receive(this Socket @this)
+        public static ICommand Receive(this Socket @this, CommandFilter commandFilter)
         {
             byte[] bytes = ReadBytes(@this);
-            string command = SocketSettings.Default.Encoding.GetString(bytes);
-
-            Dictionary<string, ICommand> parameters = new Dictionary<string, ICommand>();
-            ICommand ack = new ACK();
-            parameters.Add(ack.GetCommand(), ack);
-            ICommand eom = new EOM();
-            parameters.Add(eom.GetCommand(), eom);
-
-            if (parameters.ContainsKey(command))
+            string cmd = SocketSettings.Default.Encoding.GetString(bytes);
+            ICommand command = commandFilter.Filter(cmd);
+            if (command.IsNull())
             {
-                return parameters[command];
+                throw new NotSupportedException($"Not Supported Command: {cmd}");
             }
-            return null;
+            return command;
         }
 
         private static byte[] ReadBytes(this Socket @this)
@@ -117,7 +111,10 @@ namespace Com.Gitusme.Net.Extensiones.Core
 
         public abstract string GetCommand();
 
-        public abstract IResultParser GetResultParser();
+        public virtual IResultParser GetResultParser()
+        {
+            return new DefaultResultParser();
+        }
     }
 
     public class ACK : AbstractCommand
@@ -126,11 +123,6 @@ namespace Com.Gitusme.Net.Extensiones.Core
         {
             return "<|ACK|>";
         }
-
-        public override IResultParser GetResultParser()
-        {
-            return new StringResultParser();
-        }
     }
 
     public class EOM : AbstractCommand
@@ -138,11 +130,6 @@ namespace Com.Gitusme.Net.Extensiones.Core
         public override string GetCommand()
         {
             return "<|EOM|>";
-        }
-
-        public override IResultParser GetResultParser()
-        {
-            return new StringResultParser();
         }
     }
 
@@ -184,7 +171,7 @@ namespace Com.Gitusme.Net.Extensiones.Core
         public abstract ICommandResult Parse(byte[] result);
     }
 
-    public class StringResultParser : AbstractResultParser
+    public class DefaultResultParser : AbstractResultParser
     {
         public override ICommandResult Parse(byte[] bytes)
         {
