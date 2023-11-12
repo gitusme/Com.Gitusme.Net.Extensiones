@@ -28,8 +28,10 @@ namespace Com.Gitusme.Net.Extensiones.Core
         /// <summary>
         /// 接收到客户端连接
         /// </summary>
+        /// <param name="commandFilter"></param>
         /// <param name="acceptHandler"></param>
-        public virtual void OnAccepted(ISocketHandler acceptHandler) { }
+        public virtual void OnAccepted(
+            CommandFilter commandFilter, ISocketHandler acceptHandler) { }
 
         /// <summary>
         /// 出错

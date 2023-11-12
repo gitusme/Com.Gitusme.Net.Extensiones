@@ -16,19 +16,24 @@ namespace Com.Gitusme.Net.Extensiones.Demos
 
             Thread serverThread = new Thread(() =>
             {
-                ISocketHandler server = SocketBuilder.Builder()
-                    .Create("127.0.0.1", 8080)
+                CommandFactory factory = new DefaultCommandFactory();
+                factory.AddCommand(new ACK());
+                factory.AddCommand(new EOM());
+
+                ISocketServerHandler server = SocketBuilder.Builder()
+                    .CommandFactory(factory)
                     .AddListener(new ServerSocketListener())
-                    .StartServer(5);
+                    .CreateServer("127.0.0.1", 8080, 5)
+                    .StartListening();
             });
             serverThread.Start();
 
             Thread clientThread = new Thread((clientId) =>
             {
                 ISocketHandler client = SocketBuilder.Builder()
-                    .Create("127.0.0.1", 8080)
                     .AddListener(new ClientSocketListener())
-                    .StartClient();
+                    .CreateClient("127.0.0.1", 8080)
+                    .Start();
 
                 string tag = $"{clientId}]";
 
@@ -107,7 +112,8 @@ namespace Com.Gitusme.Net.Extensiones.Demos
             System.Console.WriteLine("Server: OnStopped");
         }
 
-        public override void OnAccepted(ISocketHandler acceptHandler)
+        public override void OnAccepted(
+            CommandFilter commandFilter, ISocketHandler acceptHandler)
         {
             System.Console.WriteLine("Server: OnAccepted");
             Thread aceeptThread = new Thread((accept) =>
@@ -119,7 +125,7 @@ namespace Com.Gitusme.Net.Extensiones.Demos
                     try
                     {
                         CommandReceiver receiver = new CommandReceiver(acceptHandler);
-                        ICommand command = receiver.Receive();
+                        ICommand command = receiver.Receive(commandFilter);
                         Console.WriteLine("Server received: {0}", command.GetCommand());
 
                         string msg = $"{command.GetCommand()}, SUCCESS";

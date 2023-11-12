@@ -20,6 +20,7 @@ namespace Com.Gitusme.Net.Extensiones.Core
         private Lazy<Socket> _socket;
         private IPEndPoint _endPoint;
         private ISocketListener _socketListener;
+        private CommandFactory _commandFactory;
         private bool _blocking = true;
 
         private SocketBuilder()
@@ -31,17 +32,59 @@ namespace Com.Gitusme.Net.Extensiones.Core
             return new SocketBuilder();
         }
 
-        public SocketBuilder Create(string host, int port)
+        public SocketBuilder AddListener<T>(T socketListener) where T : ISocketListener
+        {
+            this._socketListener = socketListener;
+            return this;
+        }
+
+        public SocketBuilder CommandFactory<T>(T commandFactory) where T : CommandFactory
+        {
+            this._commandFactory = commandFactory;
+            return this;
+        }
+
+        public SocketBuilder Blocking(bool blocking)
+        {
+            this._blocking = blocking;
+            return this;
+        }
+
+        public ISocketHandler CreateClient(string host, int port)
+        {
+            Create(host, port);
+
+            Socket socket = this._socket.Value;
+            socket.Blocking = this._blocking;
+            ClientSocketHandler handler = new ClientSocketHandler(
+                (this._socketListener as SocketClientListener), socket, this._endPoint);
+            handler.SetCommandFactory(this._commandFactory);
+            return handler;
+        }
+
+        public ISocketServerHandler CreateServer(string host, int port, int backlog)
+        {
+            Create(host, port);
+
+            Socket socket = this._socket.Value;
+            socket.Blocking = this._blocking;
+            ServerSocketHandler handler = new ServerSocketHandler(
+                (this._socketListener as SocketServerListener), socket, this._endPoint, backlog);
+            handler.SetCommandFactory(this._commandFactory);
+            return handler;
+        }
+
+        private SocketBuilder Create(string host, int port)
         {
             return Create(host, port, SocketType.Stream, ProtocolType.Tcp);
         }
 
-        public SocketBuilder Create(IPAddress ipAddress, int port)
+        private SocketBuilder Create(IPAddress ipAddress, int port)
         {
             return Create(ipAddress, port, SocketType.Stream, ProtocolType.Tcp);
         }
 
-        public SocketBuilder Create(string host, int port, SocketType socketType, ProtocolType protocolType)
+        private SocketBuilder Create(string host, int port, SocketType socketType, ProtocolType protocolType)
         {
             IPHostEntry hostEntry = Dns.GetHostEntry(host);
             IPAddress ipAddress = hostEntry.AddressList[0];
@@ -49,7 +92,7 @@ namespace Com.Gitusme.Net.Extensiones.Core
             return Create(ipAddress, port, socketType, protocolType);
         }
 
-        public SocketBuilder Create(IPAddress ipAddress, int port, SocketType socketType, ProtocolType protocolType)
+        private SocketBuilder Create(IPAddress ipAddress, int port, SocketType socketType, ProtocolType protocolType)
         {
             this._endPoint = new IPEndPoint(ipAddress, port);
             this._socket = new Lazy<Socket>(() =>
@@ -66,36 +109,6 @@ namespace Com.Gitusme.Net.Extensiones.Core
             });
 
             return this;
-        }
-
-        public SocketBuilder AddListener<T>(T socketListener) where T : ISocketListener
-        {
-            this._socketListener = socketListener;
-            return this;
-        }
-
-        public SocketBuilder Blocking(bool blocking)
-        {
-            this._blocking = blocking;
-            return this;
-        }
-
-        public ISocketHandler StartClient()
-        {
-            Socket socket = this._socket.Value;
-            socket.Blocking = this._blocking;
-            ISocketHandler handler = new ClientSocketHandler(
-                (this._socketListener as SocketClientListener), socket, this._endPoint);
-            return handler;
-        }
-
-        public ISocketHandler StartServer(int backlog)
-        {
-            Socket socket = this._socket.Value;
-            socket.Blocking = this._blocking;
-            ISocketHandler handler = new ServerSocketHandler(
-                (this._socketListener as SocketServerListener), socket, this._endPoint, backlog);
-            return handler;
         }
     }
 }

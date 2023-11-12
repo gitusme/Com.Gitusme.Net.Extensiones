@@ -141,9 +141,9 @@ namespace Com.Gitusme.Net.Extensiones.Core
             this._socketHandler = socketHandler;
         }
 
-        public ICommand Receive()
+        public ICommand Receive(CommandFilter commandFilter)
         {
-            return this._socketHandler.Receive();
+            return this._socketHandler.Receive(commandFilter);
         }
     }
 

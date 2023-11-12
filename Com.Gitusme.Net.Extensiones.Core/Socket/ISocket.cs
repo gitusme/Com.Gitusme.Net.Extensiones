@@ -11,15 +11,15 @@ namespace Com.Gitusme.Net.Extensiones.Core
 {
     public interface ISocketHandler
     {
-        void SetCommandFactory(CommandFactory factory);
+        CommandFilter CommandFilter { get; }
 
-        void Open();
+        ISocketHandler Start();
 
         void Close();
 
         ICommandResult Send(ICommand command);
 
-        ICommand Receive();
+        ICommand Receive(CommandFilter commandFilter);
 
 
         int Send(byte[] buffer);
@@ -33,15 +33,24 @@ namespace Com.Gitusme.Net.Extensiones.Core
         int Receive(byte[] buffer, int offset, int size, SocketFlags socketFlags);
     }
 
+    public interface ISocketServerHandler : ISocketHandler
+    {
+        ISocketServerHandler StartListening();
+    }
+
     public abstract class SocketHandler : ISocketHandler, IDisposable
     {
         internal protected byte[] _buffer = new byte[1024];
+
+        internal protected bool _isClosed = false;
 
         internal protected ISocketListener _socketListener;
         internal protected Socket _socket;
         internal protected EndPoint _endPoint;
         internal protected CommandFactory _commandFactory;
         internal protected CommandFilter _commandFilter;
+
+        public CommandFilter CommandFilter { get { return this._commandFilter; } }
 
         public SocketHandler(
             ISocketListener socketListener, Socket socket, EndPoint endPoint)
@@ -51,32 +60,37 @@ namespace Com.Gitusme.Net.Extensiones.Core
             this._endPoint = endPoint;
             this._commandFactory = new DefaultCommandFactory();
             this._commandFilter = new CommandFilter(this._commandFactory);
-
-            try
-            {
-                Open();
-            }
-            catch (Exception e)
-            {
-                this._socketListener?.OnError(e);
-            }
         }
 
         public virtual void SetCommandFactory(CommandFactory commandFactory)
         {
             this._commandFactory = commandFactory.OrDefault(new DefaultCommandFactory());
-            this._commandFilter = new CommandFilter(commandFactory);
+            this._commandFilter = new CommandFilter(this._commandFactory);
         }
 
-        public virtual void Open()
+        public virtual ISocketHandler Start()
         {
+            try
+            {
+                ISocketHandler handler = OpenSocket();
+                this._isClosed = false;
+                return handler;
+            }
+            catch (Exception e)
+            {
+                this._socketListener?.OnError(e);
+                return null;
+            }
         }
+
+        protected abstract ISocketHandler OpenSocket();
 
         public virtual void Close()
         {
             try
             {
                 CloseSocket();
+                this._isClosed = true;
             }
             catch (Exception e)
             {
@@ -100,12 +114,12 @@ namespace Com.Gitusme.Net.Extensiones.Core
             });
         }
 
-        public ICommand Receive()
+        public ICommand Receive(CommandFilter commandFilter)
         {
             return HandleSendEvent(() =>
             {
                 return InvokeAction(
-                    () => { return this._socket.Receive(this._commandFilter); });
+                    () => { return this._socket.Receive(commandFilter); });
             });
         }
 
@@ -279,17 +293,20 @@ namespace Com.Gitusme.Net.Extensiones.Core
         {
         }
 
-        public override void Open()
+        protected override ISocketHandler OpenSocket()
         {
             InvokeAction(
                 () => { this._socket.Connect(this._endPoint); },
                 () => { return _socket.Connected; });
             (this._socketListener as SocketClientListener)?.OnConnected();
+            return this;
         }
 
         protected virtual void CloseSocket()
         {
-            this._socket.Shutdown(SocketShutdown.Both);
+            InvokeAction(
+                () => { this._socket.Shutdown(SocketShutdown.Both); },
+                () => { return true; });
             (this._socketListener as SocketClientListener)?.OnDisconnected();
         }
     }
@@ -300,10 +317,16 @@ namespace Com.Gitusme.Net.Extensiones.Core
             : base(null, socket, null)
         {
         }
+
+        protected override ISocketHandler OpenSocket()
+        {
+            return this;
+        }
     }
 
-    public class ServerSocketHandler : SocketHandler
+    public class ServerSocketHandler : SocketHandler, ISocketServerHandler
     {
+        private int _backlog = 5;
         private List<ISocketHandler> _clients = new List<ISocketHandler>();
 
         public List<ISocketHandler> AcceptSocketHandlers
@@ -315,25 +338,42 @@ namespace Com.Gitusme.Net.Extensiones.Core
             SocketServerListener socketListener, Socket socket, EndPoint endPoint, int backlog)
             : base(socketListener, socket, endPoint)
         {
-            StartListen(backlog);
+            this._backlog = backlog;
         }
 
-        public override void Open()
+        public ISocketServerHandler StartListening()
         {
             this._socket.Bind(this._endPoint);
-        }
 
-        private void StartListen(int backlog)
-        {
-            this._socket.Listen(backlog);
+            this._socket.Listen(this._backlog);
             (this._socketListener as SocketServerListener)?.OnStarted();
 
+            Thread thread = new Thread((commandFilter) =>
+            {
+                while (!_isClosed)
+                {
+                    ISocketHandler acceptHandler = AcceptSocket();
+                    this._clients.Add(acceptHandler);
+                    (this._socketListener as SocketServerListener)?.OnAccepted(
+                        (CommandFilter)commandFilter, acceptHandler);
+                }
+            });
+            thread.Start(this._commandFilter);
+
+            return this;
+        }
+
+        private ISocketHandler AcceptSocket()
+        {
             Socket client = InvokeAction(
                 () => { return this._socket.Accept(); });
-
             ISocketHandler handler = new AcceptSocketHandler(client);
-            this._clients.Add(handler);
-            (this._socketListener as SocketServerListener)?.OnAccepted(handler);
+            return handler;
+        }
+
+        protected override ISocketHandler OpenSocket()
+        {
+            return this;
         }
 
         protected override void CloseSocket()
