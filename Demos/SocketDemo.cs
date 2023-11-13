@@ -18,7 +18,6 @@ namespace Com.Gitusme.Net.Extensiones.Demos
             {
                 CommandFactory factory = new DefaultCommandFactory();
                 factory.AddCommand(new ACK());
-                factory.AddCommand(new EOM());
 
                 ISocketServerHandler server = SocketBuilder.Builder()
                     .CommandFactory(factory)
