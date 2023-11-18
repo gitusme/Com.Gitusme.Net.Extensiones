@@ -8,6 +8,101 @@ using Com.Gitusme.Net.Extensiones.Core;
 
 namespace Com.Gitusme.Net.Extensiones.Demos
 {
+    namespace Client
+    {
+        public class ACK : AbstractCommand
+        {
+            public override string GetCommand()
+            {
+                return "<|ACK|>";
+            }
+
+            public override IResultParser GetResultParser()
+            {
+                return new ACKResultParser();
+            }
+        }
+
+        public class ACKResultParser : AbstractResultParser
+        {
+            public override ACKCommandResult Parse(byte[] result)
+            {
+                return new ACKCommandResult(result);
+            }
+        }
+
+        public class ACKCommandResult : ICommandResult
+        {
+            private byte[] result;
+
+            public ACKCommandResult(byte[] result)
+            {
+                this.result = result;
+            }
+
+            public byte[] Get()
+            {
+                return this.result;
+            }
+        }
+
+        public class EOM : AbstractCommand
+        {
+            public override string GetCommand()
+            {
+                return "<|EOM|>";
+            }
+        }
+    }
+
+    namespace Server
+    {
+        public class ACK : AbstractCommand
+        {
+            public override string GetCommand()
+            {
+                return "<|ACK|>";
+            }
+
+            public override IResultParser GetResultParser()
+            {
+                return new ACKResultParser();
+            }
+        }
+
+        public class ACKResultParser : AbstractResultParser
+        {
+            public override ACKCommandResult Parse(byte[] result)
+            {
+                return new ACKCommandResult(result);
+            }
+        }
+
+        public class ACKCommandResult : ICommandResult
+        {
+            private byte[] result;
+
+            public ACKCommandResult(byte[] result)
+            {
+                this.result = result;
+            }
+
+            public byte[] Get()
+            {
+                return SocketSettings.Default.Encoding.GetBytes(
+                    $"Server said: {SocketSettings.Default.Encoding.GetString(result)}");
+            }
+        }
+
+        public class EOM : AbstractCommand
+        {
+            public override string GetCommand()
+            {
+                return "<|EOM|>";
+            }
+        }
+    }
+
     internal class SocketDemo : IExtensionesDemo
     {
         public override void Execute()
@@ -17,7 +112,7 @@ namespace Com.Gitusme.Net.Extensiones.Demos
             Thread serverThread = new Thread(() =>
             {
                 CommandFactory factory = new DefaultCommandFactory();
-                factory.AddCommand(new ACK());
+                factory.AddUserCommand(new Server.ACK());
 
                 ISocketServerHandler server = SocketBuilder.Builder()
                     .CommandFactory(factory)
@@ -32,41 +127,25 @@ namespace Com.Gitusme.Net.Extensiones.Demos
                 ISocketHandler client = SocketBuilder.Builder()
                     .AddListener(new ClientSocketListener())
                     .CreateClient("127.0.0.1", 8080)
-                    .Start();
+                    .Open();
 
-                string tag = $"{clientId}]";
+                string tag = $"{clientId}";
 
                 CommandExecutor executor = new CommandExecutor(client);
 
-                ICommandResult ack = executor.Execute(new ACK());
+                ICommandResult ack = executor.Execute(new Client.ACK());
                 string ackResult = SocketSettings.Default.Encoding.GetString(ack.Get());
 
-                Console.WriteLine($"[{tag}] Command Result: {ackResult}");
+                Console.WriteLine($"[{tag}] ACK Result: {ackResult}");
 
-                ICommandResult eom = executor.Execute(new EOM());
+                ICommandResult eom = executor.Execute(new Client.EOM());
                 string eomResult = SocketSettings.Default.Encoding.GetString(eom.Get());
 
-                Console.WriteLine($"[{tag}] Command Result: {eomResult}");
+                Console.WriteLine($"[{tag}] EOM Result: {eomResult}");
 
+                client.Close();
             });
             clientThread.Start($"CLIENT");
-        }
-
-        private byte[] Receive(ISocketHandler handler)
-        {
-            string data = String.Empty;
-            byte[] bytes = new byte[1024];
-            while (true)
-            {
-                int bytesRec = handler.Receive(bytes, SocketFlags.None);
-                if (bytesRec > 0 && bytesRec < bytes.Length)
-                {
-                    data += Encoding.ASCII.GetString(bytes, 0, bytesRec);
-                    break;
-                }
-            }
-            byte[] msg = Encoding.ASCII.GetBytes(data);
-            return msg;
         }
 
     }
@@ -86,16 +165,6 @@ namespace Com.Gitusme.Net.Extensiones.Demos
         public override void OnError(Exception e)
         {
             System.Console.WriteLine("Client: OnError");
-        }
-
-        public override void OnSend()
-        {
-            //System.Console.WriteLine("Client: OnSend");
-        }
-
-        public override void OnReceived()
-        {
-            //System.Console.WriteLine("Client: OnReceived");
         }
     }
 
@@ -119,15 +188,14 @@ namespace Com.Gitusme.Net.Extensiones.Demos
             {
                 var acceptHandler = accept as ISocketHandler;
 
-                while (true)
+                while (acceptHandler.IsConnected)
                 {
                     try
                     {
                         CommandReceiver receiver = new CommandReceiver(acceptHandler);
                         ICommand command = receiver.Receive(commandFilter);
-                        Console.WriteLine("Server received: {0}", command.GetCommand());
 
-                        string msg = $"{command.GetCommand()}, SUCCESS";
+                        string msg = $"I received '{command.GetCommand()}'.";
                         ICommandResult result = command.GetResultParser().Parse(
                             SocketSettings.Default.Encoding.GetBytes(msg));
                         acceptHandler.Send(result.Get());
@@ -137,54 +205,16 @@ namespace Com.Gitusme.Net.Extensiones.Demos
                         string msg = e.Message;
                         acceptHandler.Send(SocketSettings.Default.Encoding.GetBytes(msg));
                     }
-
-                    Thread.Sleep(1000);
                 }
-
-                //while (true)
-                //{
-                //    var acceptHandler = accept as ISocketHandler;
-
-                //    byte[] receiveBytes = Receive(acceptHandler);
-                //    Console.WriteLine("Server received: {0}",
-                //        Encoding.ASCII.GetString(receiveBytes));
-                //    byte[] sendBytes = Encoding.ASCII.GetBytes("I am gitusme.");
-                //    acceptHandler?.Send(sendBytes);
-                //}
             });
             aceeptThread.Start(acceptHandler);
         }
 
-        //private byte[] Receive(ISocketHandler handler)
-        //{
-        //    string data = String.Empty;
-        //    byte[] bytes = new byte[1024];
-        //    while (true)
-        //    {
-        //        int bytesRec = handler.Receive(bytes, SocketFlags.None);
-        //        if (bytesRec > 0 && bytesRec < bytes.Length)
-        //        {
-        //            data += Encoding.ASCII.GetString(bytes, 0, bytesRec);
-        //            break;
-        //        }
-        //    }
-        //    byte[] msg = Encoding.ASCII.GetBytes(data);
-        //    return msg;
-        //}
 
         public override void OnError(Exception e)
         {
             System.Console.WriteLine("Server: OnError");
         }
 
-        public override void OnSend()
-        {
-            //System.Console.WriteLine("Server: OnSend");
-        }
-
-        public override void OnReceived()
-        {
-            //System.Console.WriteLine("Server: OnReceived");
-        }
     }
 }

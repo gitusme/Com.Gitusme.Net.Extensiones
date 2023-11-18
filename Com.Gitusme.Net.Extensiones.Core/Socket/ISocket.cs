@@ -1,4 +1,8 @@
-﻿using System;
+﻿/*********************************************************
+ * Copyright (c) 2023-2023 gitusme, All rights reserved.
+ *********************************************************/
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net;
@@ -9,35 +13,124 @@ using System.Threading.Tasks;
 
 namespace Com.Gitusme.Net.Extensiones.Core
 {
+    /// <summary>
+    /// 套接字句柄
+    /// </summary>
     public interface ISocketHandler
     {
+        /// <summary>
+        /// 命令过滤器
+        /// </summary>
         CommandFilter CommandFilter { get; }
 
-        ISocketHandler Start();
+        /// <summary>
+        /// 打开套接字
+        /// </summary>
+        /// <returns></returns>
+        ISocketHandler Open();
 
+        /// <summary>
+        /// 关闭套接字
+        /// </summary>
         void Close();
 
+        /// <summary>
+        /// 是否已连接
+        /// </summary>
+        bool IsConnected { get; }
+
+        /// <summary>
+        /// 发送命令
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
         ICommandResult Send(ICommand command);
 
+        /// <summary>
+        /// 接收命令结果
+        /// </summary>
+        /// <param name="commandFilter"></param>
+        /// <returns></returns>
         ICommand Receive(CommandFilter commandFilter);
 
-
+        /// <summary>
+        /// 发送数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
         int Send(byte[] buffer);
+        /// <summary>
+        /// 发送数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="socketFlags"></param>
+        /// <returns></returns>
         int Send(byte[] buffer, SocketFlags socketFlags);
+        /// <summary>
+        /// 发送数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="size"></param>
+        /// <param name="socketFlags"></param>
+        /// <returns></returns>
         int Send(byte[] buffer, int size, SocketFlags socketFlags);
+        /// <summary>
+        /// 发送数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="size"></param>
+        /// <param name="socketFlags"></param>
+        /// <returns></returns>
         int Send(byte[] buffer, int offset, int size, SocketFlags socketFlags);
 
+        /// <summary>
+        /// 接收数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
         int Receive(byte[] buffer);
+        /// <summary>
+        /// 接收数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="socketFlags"></param>
+        /// <returns></returns>
         int Receive(byte[] buffer, SocketFlags socketFlags);
+        /// <summary>
+        /// 接收数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="size"></param>
+        /// <param name="socketFlags"></param>
+        /// <returns></returns>
         int Receive(byte[] buffer, int size, SocketFlags socketFlags);
+        /// <summary>
+        /// 接收数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="size"></param>
+        /// <param name="socketFlags"></param>
+        /// <returns></returns>
         int Receive(byte[] buffer, int offset, int size, SocketFlags socketFlags);
     }
 
+    /// <summary>
+    /// 服务端套接字句柄
+    /// </summary>
     public interface ISocketServerHandler : ISocketHandler
     {
+        /// <summary>
+        /// 启动监听
+        /// </summary>
+        /// <returns></returns>
         ISocketServerHandler StartListening();
     }
 
+    /// <summary>
+    /// 抽象套接字实现类
+    /// </summary>
     public abstract class SocketHandler : ISocketHandler, IDisposable
     {
         internal protected byte[] _buffer = new byte[1024];
@@ -51,6 +144,8 @@ namespace Com.Gitusme.Net.Extensiones.Core
         internal protected CommandFilter _commandFilter;
 
         public CommandFilter CommandFilter { get { return this._commandFilter; } }
+
+        public bool IsConnected => _socket.Connected;
 
         public SocketHandler(
             ISocketListener socketListener, Socket socket, EndPoint endPoint)
@@ -68,7 +163,7 @@ namespace Com.Gitusme.Net.Extensiones.Core
             this._commandFilter = new CommandFilter(this._commandFactory);
         }
 
-        public virtual ISocketHandler Start()
+        public virtual ISocketHandler Open()
         {
             try
             {
@@ -195,61 +290,14 @@ namespace Com.Gitusme.Net.Extensiones.Core
             });
         }
 
-        protected void InvokeAction(Action action, Func<bool> until)
+        protected void InvokeAction(Action action)
         {
-            if (_socket.Blocking)
-            {
-                action.Invoke();
-            }
-            else
-            {
-                while (true)
-                {
-                    try
-                    {
-                        if (until != null && until.Invoke())
-                        {
-                            break;
-                        }
-                        action.Invoke();
-                    }
-                    catch (SocketException e) when (e.SocketErrorCode == SocketError.WouldBlock)
-                    {
-                        continue;
-                    }
-                    catch
-                    {
-                        throw;
-                    }
-                }
-            }
+            action.Invoke();
         }
 
         protected T InvokeAction<T>(Func<T> action)
         {
-            if (_socket.Blocking)
-            {
-                return action.Invoke();
-            }
-            else
-            {
-                while (true)
-                {
-                    try
-                    {
-                        return action.Invoke();
-                    }
-                    catch (SocketException e) when (e.SocketErrorCode == SocketError.WouldBlock)
-                    {
-                        continue;
-                    }
-                    catch (Exception)
-                    {
-                        throw;
-                    }
-                }
-                throw new TimeoutException("InvokeAction timeout");
-            }
+            return action.Invoke();
         }
 
         private T HandleSendEvent<T>(Func<T> func)
@@ -285,6 +333,9 @@ namespace Com.Gitusme.Net.Extensiones.Core
         }
     }
 
+    /// <summary>
+    /// 客户端套接字实现类
+    /// </summary>
     public class ClientSocketHandler : SocketHandler
     {
         public ClientSocketHandler(
@@ -295,35 +346,21 @@ namespace Com.Gitusme.Net.Extensiones.Core
 
         protected override ISocketHandler OpenSocket()
         {
-            InvokeAction(
-                () => { this._socket.Connect(this._endPoint); },
-                () => { return _socket.Connected; });
+            InvokeAction(() => { this._socket.Connect(this._endPoint); });
             (this._socketListener as SocketClientListener)?.OnConnected();
             return this;
         }
 
-        protected virtual void CloseSocket()
+        protected override void CloseSocket()
         {
-            InvokeAction(
-                () => { this._socket.Shutdown(SocketShutdown.Both); },
-                () => { return true; });
+            InvokeAction(() => { this._socket.Shutdown(SocketShutdown.Both); });
             (this._socketListener as SocketClientListener)?.OnDisconnected();
         }
     }
 
-    public class AcceptSocketHandler : SocketHandler
-    {
-        public AcceptSocketHandler(Socket socket)
-            : base(null, socket, null)
-        {
-        }
-
-        protected override ISocketHandler OpenSocket()
-        {
-            return this;
-        }
-    }
-
+    /// <summary>
+    /// 服务端套接字实现类
+    /// </summary>
     public class ServerSocketHandler : SocketHandler, ISocketServerHandler
     {
         private int _backlog = 5;
@@ -365,8 +402,7 @@ namespace Com.Gitusme.Net.Extensiones.Core
 
         private ISocketHandler AcceptSocket()
         {
-            Socket client = InvokeAction(
-                () => { return this._socket.Accept(); });
+            Socket client = InvokeAction(() => { return this._socket.Accept(); });
             ISocketHandler handler = new AcceptSocketHandler(client);
             return handler;
         }
@@ -378,9 +414,25 @@ namespace Com.Gitusme.Net.Extensiones.Core
 
         protected override void CloseSocket()
         {
-            this._socket.Shutdown(SocketShutdown.Both);
+            InvokeAction(() => { this._socket.Shutdown(SocketShutdown.Both); });
             (this._socketListener as SocketServerListener)?.OnStopped();
         }
     }
 
+
+    /// <summary>
+    /// 服务端套接字实现类
+    /// </summary>
+    public class AcceptSocketHandler : SocketHandler
+    {
+        public AcceptSocketHandler(Socket socket)
+            : base(null, socket, null)
+        {
+        }
+
+        protected override ISocketHandler OpenSocket()
+        {
+            return this;
+        }
+    }
 }

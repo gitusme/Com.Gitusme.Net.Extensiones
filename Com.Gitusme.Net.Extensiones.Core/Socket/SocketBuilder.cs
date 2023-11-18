@@ -21,7 +21,6 @@ namespace Com.Gitusme.Net.Extensiones.Core
         private IPEndPoint _endPoint;
         private ISocketListener _socketListener;
         private CommandFactory _commandFactory;
-        private bool _blocking = true;
 
         private SocketBuilder()
         {
@@ -44,18 +43,12 @@ namespace Com.Gitusme.Net.Extensiones.Core
             return this;
         }
 
-        public SocketBuilder Blocking(bool blocking)
-        {
-            this._blocking = blocking;
-            return this;
-        }
-
         public ISocketHandler CreateClient(string host, int port)
         {
             Create(host, port);
 
             Socket socket = this._socket.Value;
-            socket.Blocking = this._blocking;
+            socket.Blocking = true;
             ClientSocketHandler handler = new ClientSocketHandler(
                 (this._socketListener as SocketClientListener), socket, this._endPoint);
             handler.SetCommandFactory(this._commandFactory);
@@ -67,7 +60,7 @@ namespace Com.Gitusme.Net.Extensiones.Core
             Create(host, port);
 
             Socket socket = this._socket.Value;
-            socket.Blocking = this._blocking;
+            socket.Blocking = true;
             ServerSocketHandler handler = new ServerSocketHandler(
                 (this._socketListener as SocketServerListener), socket, this._endPoint, backlog);
             handler.SetCommandFactory(this._commandFactory);

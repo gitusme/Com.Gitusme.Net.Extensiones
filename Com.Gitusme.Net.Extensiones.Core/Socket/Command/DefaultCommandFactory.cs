@@ -1,9 +1,16 @@
-﻿using System;
+﻿/*********************************************************
+ * Copyright (c) 2019-2023 gitusme, All rights reserved.
+ *********************************************************/
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Com.Gitusme.Net.Extensiones.Core
 {
+    /// <summary>
+    /// Default Command Factory
+    /// </summary>
     public class DefaultCommandFactory : CommandFactory
     {
         public DefaultCommandFactory()
@@ -13,7 +20,6 @@ namespace Com.Gitusme.Net.Extensiones.Core
 
         protected override void Init()
         {
-            AddCommand(_defaults, new ACK());
         }
     }
 }
