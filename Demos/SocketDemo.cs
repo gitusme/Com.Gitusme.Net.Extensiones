@@ -119,31 +119,42 @@ namespace Com.Gitusme.Net.Extensiones.Demos
                     .AddListener(new ServerSocketListener())
                     .CreateServer("127.0.0.1", 8080, 5)
                     .StartListening();
+
             });
             serverThread.Start();
 
             Thread clientThread = new Thread((clientId) =>
             {
-                ISocketHandler client = SocketBuilder.Builder()
-                    .AddListener(new ClientSocketListener())
-                    .CreateClient("127.0.0.1", 8080)
-                    .Open();
+                for(int i = 1; i <= 10000; i++)
+                {
+                    System.Console.WriteLine("==== times=" + i.ToString("D5"));
 
-                string tag = $"{clientId}";
+                    ISocketHandler client = SocketBuilder.Builder()
+                        .AddListener(new ClientSocketListener())
+                        .CreateClient("127.0.0.1", 8080)
+                        .Open();
 
-                CommandExecutor executor = new CommandExecutor(client);
+                    string tag = $"{clientId}";
 
-                ICommandResult ack = executor.Execute(new Client.ACK());
-                string ackResult = SocketSettings.Default.Encoding.GetString(ack.Get());
+                    CommandExecutor executor = new CommandExecutor(client);
 
-                Console.WriteLine($"[{tag}] ACK Result: {ackResult}");
+                    ICommandResult ack = executor.Execute(new Client.ACK());
+                    string ackResult = SocketSettings.Default.Encoding.GetString(ack.Get());
 
-                ICommandResult eom = executor.Execute(new Client.EOM());
-                string eomResult = SocketSettings.Default.Encoding.GetString(eom.Get());
+                    Console.WriteLine($"[{tag}] ACK Result: {ackResult}");
 
-                Console.WriteLine($"[{tag}] EOM Result: {eomResult}");
+                    ICommandResult eom = executor.Execute(new Client.EOM());
+                    string eomResult = SocketSettings.Default.Encoding.GetString(eom.Get());
 
-                client.Close();
+                    Console.WriteLine($"[{tag}] EOM Result: {eomResult}");
+
+                    client.Close();
+
+                    Thread.Sleep(200);
+                    System.Console.WriteLine();
+                }
+
+                System.Console.WriteLine("Exit = 0");
             });
             clientThread.Start($"CLIENT");
         }
@@ -166,6 +177,7 @@ namespace Com.Gitusme.Net.Extensiones.Demos
         {
             System.Console.WriteLine("Client: OnError");
         }
+
     }
 
     class ServerSocketListener : Core.SocketServerListener
@@ -183,7 +195,7 @@ namespace Com.Gitusme.Net.Extensiones.Demos
         public override void OnAccepted(
             CommandFilter commandFilter, ISocketHandler acceptHandler)
         {
-            System.Console.WriteLine("Server: OnAccepted");
+            System.Console.WriteLine($"Server: OnAccepted Client-{acceptHandler.Handle}");
             Thread aceeptThread = new Thread((accept) =>
             {
                 var acceptHandler = accept as ISocketHandler;
@@ -205,7 +217,13 @@ namespace Com.Gitusme.Net.Extensiones.Demos
                         string msg = e.Message;
                         acceptHandler.Send(SocketSettings.Default.Encoding.GetBytes(msg));
                     }
+                    catch (SocketException e) when (e.SocketErrorCode == SocketError.Shutdown
+                    || e.SocketErrorCode == SocketError.ConnectionAborted)
+                    {
+                        break;
+                    }
                 }
+                System.Console.WriteLine($"Client-{acceptHandler.Handle} is exit");
             });
             aceeptThread.Start(acceptHandler);
         }

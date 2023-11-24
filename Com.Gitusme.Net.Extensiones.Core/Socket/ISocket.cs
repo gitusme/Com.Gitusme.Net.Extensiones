@@ -35,6 +35,11 @@ namespace Com.Gitusme.Net.Extensiones.Core
         void Close();
 
         /// <summary>
+        /// 套接字句柄编号
+        /// </summary>
+        int Handle { get; }
+
+        /// <summary>
         /// 是否已连接
         /// </summary>
         bool IsConnected { get; }
@@ -145,7 +150,47 @@ namespace Com.Gitusme.Net.Extensiones.Core
 
         public CommandFilter CommandFilter { get { return this._commandFilter; } }
 
-        public bool IsConnected => _socket.Connected;
+        public int Handle
+        {
+            get { return this._socket.Handle.ToInt32(); }
+        }
+
+        public bool IsConnected
+        {
+            get
+            {
+                if (_socket.Connected)
+                {
+                    if ((_socket.Poll(0, SelectMode.SelectWrite)) && (!_socket.Poll(0, SelectMode.SelectError)))
+                    {
+                        try
+                        {
+                            byte[] buffer = new byte[1];
+                            if (_socket.Receive(buffer, SocketFlags.Peek) == 0)
+                            {
+                                return false;
+                            }
+                            else
+                            {
+                                return true;
+                            }
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
 
         public SocketHandler(
             ISocketListener socketListener, Socket socket, EndPoint endPoint)
@@ -353,7 +398,11 @@ namespace Com.Gitusme.Net.Extensiones.Core
 
         protected override void CloseSocket()
         {
-            InvokeAction(() => { this._socket.Shutdown(SocketShutdown.Both); });
+            InvokeAction(() => {
+                this._socket.Shutdown(SocketShutdown.Both);
+                this._socket.Disconnect(false);
+                this._socket.Close();
+            });
             (this._socketListener as SocketClientListener)?.OnDisconnected();
         }
     }
@@ -389,13 +438,40 @@ namespace Com.Gitusme.Net.Extensiones.Core
             {
                 while (!_isClosed)
                 {
-                    ISocketHandler acceptHandler = AcceptSocket();
-                    this._clients.Add(acceptHandler);
-                    (this._socketListener as SocketServerListener)?.OnAccepted(
-                        (CommandFilter)commandFilter, acceptHandler);
+                    try
+                    {
+                        ISocketHandler acceptHandler = AcceptSocket();
+                        this._clients.Add(acceptHandler);
+                        (this._socketListener as SocketServerListener)?.OnAccepted(
+                            (CommandFilter)commandFilter, acceptHandler);
+                    }
+                    catch (SocketException e) when (e.SocketErrorCode  == SocketError.Interrupted)
+                    {
+                        // server is closed
+                        break;
+                    }
                 }
             });
             thread.Start(this._commandFilter);
+
+            Thread keepAliveThread = new Thread((clients) =>
+            {
+                while (!_isClosed)
+                {
+                    List<ISocketHandler> socketHandlers = new List<ISocketHandler>(
+                        clients as List<ISocketHandler>);
+                    foreach (ISocketHandler acceptHandler in socketHandlers)
+                    {
+                        if (!acceptHandler.IsConnected)
+                        {
+                            this._clients.Remove(acceptHandler);
+                            acceptHandler.Close();
+                        }
+                    }
+                    Thread.Sleep(1000);
+                }
+            });
+            keepAliveThread.Start(this._clients);
 
             return this;
         }
@@ -414,7 +490,14 @@ namespace Com.Gitusme.Net.Extensiones.Core
 
         protected override void CloseSocket()
         {
-            InvokeAction(() => { this._socket.Shutdown(SocketShutdown.Both); });
+            InvokeAction(() => {
+                foreach (ISocketHandler acceptHandler in this._clients)
+                {
+                    acceptHandler.Close();
+                }
+                _isClosed = true;
+                this._socket.Close();
+            });
             (this._socketListener as SocketServerListener)?.OnStopped();
         }
     }
@@ -433,6 +516,15 @@ namespace Com.Gitusme.Net.Extensiones.Core
         protected override ISocketHandler OpenSocket()
         {
             return this;
+        }
+
+        protected override void CloseSocket()
+        {
+            InvokeAction(() => {
+                this._socket.Shutdown(SocketShutdown.Both);
+                this._socket.Disconnect(false);
+                this._socket.Close();
+            });
         }
     }
 }
