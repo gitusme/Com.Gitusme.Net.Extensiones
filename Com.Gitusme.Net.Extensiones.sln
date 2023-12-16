@@ -5,7 +5,9 @@ VisualStudioVersion = 17.2.32526.322
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Com.Gitusme.Net.Extensiones.Core", "Com.Gitusme.Net.Extensiones.Core\Com.Gitusme.Net.Extensiones.Core.csproj", "{473CB4BE-44BB-4E47-89CB-57ABF65B9BC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demos", ".\Demos\Demos.csproj", "{6A180089-2393-4A58-B4F9-F6B75EE8AB0E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demos", "Demos\Demos.csproj", "{6A180089-2393-4A58-B4F9-F6B75EE8AB0E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Com.Gitusme.Net.Extensiones.Wpf", "Com.Gitusme.Net.Extensiones.Wpf\Com.Gitusme.Net.Extensiones.Wpf.csproj", "{9C49BCC9-8583-44B8-B1F2-F69AA549AE02}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{6A180089-2393-4A58-B4F9-F6B75EE8AB0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A180089-2393-4A58-B4F9-F6B75EE8AB0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A180089-2393-4A58-B4F9-F6B75EE8AB0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C49BCC9-8583-44B8-B1F2-F69AA549AE02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C49BCC9-8583-44B8-B1F2-F69AA549AE02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C49BCC9-8583-44B8-B1F2-F69AA549AE02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C49BCC9-8583-44B8-B1F2-F69AA549AE02}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
