@@ -1,5 +1,5 @@
 ﻿/*********************************************************
- * Copyright (c) 2023-2023 gitusme, All rights reserved.
+ * Copyright (c) 2023-2024 gitusme, All rights reserved.
  *********************************************************/
 
 using Com.Gitusme.Net.Extensiones.Core.Config;
