@@ -34,8 +34,18 @@ namespace Com.Gitusme.Net.Extensiones.Core
 
             if (htmlColor[0] == '#')
             {
+                // #AARRGGBB
+                if (htmlColor.Length == 9)
+                {
+                    color = Color.FromArgb(
+                        Convert.ToInt32(htmlColor.Substring(1, 2), 16),
+                        Convert.ToInt32(htmlColor.Substring(3, 2), 16),
+                        Convert.ToInt32(htmlColor.Substring(5, 2), 16),
+                        Convert.ToInt32(htmlColor.Substring(7, 2), 16));
+                    return color;
+                }
                 // #RRGGBB
-                if (htmlColor.Length == 7)
+                else if (htmlColor.Length == 7)
                 {
                     color = Color.FromArgb(
                         Convert.ToInt32(htmlColor.Substring(1, 2), 16),
