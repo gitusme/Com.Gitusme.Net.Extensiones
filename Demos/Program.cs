@@ -14,6 +14,10 @@ stringExensiones.Execute();
 IExtensionesDemo loggerDemo = new LoggerDemo();
 loggerDemo.Execute();
 
+// Serial Port Demo
+IExtensionesDemo serialPortDemo = new SerialPortDemo();
+serialPortDemo.Execute();
+
 // Socket Demo
 IExtensionesDemo socketDemo = new SocketDemo();
 socketDemo.Execute();

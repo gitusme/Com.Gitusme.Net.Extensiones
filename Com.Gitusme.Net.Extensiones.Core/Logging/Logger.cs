@@ -117,6 +117,9 @@ namespace Com.Gitusme.Net.Extensiones.Core.Logging
                 using (var writer = File.AppendText(_logFile.FullName))
                 {
                     writer.WriteLine(log);
+#if DEBUG
+                    System.Console.WriteLine(log);
+#endif
                 }
             }
         }

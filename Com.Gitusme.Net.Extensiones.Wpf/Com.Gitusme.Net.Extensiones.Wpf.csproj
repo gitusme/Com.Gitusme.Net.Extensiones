@@ -4,17 +4,19 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Title>Com.Gitusme.Net.Extensiones.Wpf</Title>
     <Authors>gitusme, https://blog.csdn.net/m0_51887793</Authors>
     <Description>Com.Gitusme.Net.Extensiones.Wpf is a Wpf extension. Based on. Net Core 3.1 is currently the first release version 1.0.0, which includes two important features: Startup Animation and Video Rendering. Video rendering supports tile mode, gallery mode, and multi-viewer asynchronous rendering, which can effectively give full play to hardware performance, and is quick to integrate and easy to use.</Description>
-    <Copyright>Copyright @ gitusme 2023</Copyright>
+    <Copyright>Copyright @ gitusme 2024</Copyright>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <Platforms>AnyCPU;x86;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Com.Gitusme.Media.Video" Version="1.0.0" />
+    <PackageReference Include="Com.Gitusme.IO.Ports.SerialPort" Version="1.0.2" />
+    <PackageReference Include="Com.Gitusme.Media.Video" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup>

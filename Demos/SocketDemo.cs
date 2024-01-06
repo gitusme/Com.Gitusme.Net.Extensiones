@@ -125,7 +125,7 @@ namespace Com.Gitusme.Net.Extensiones.Demos
 
             Thread clientThread = new Thread((clientId) =>
             {
-                for(int i = 1; i <= 10000; i++)
+                for(int i = 1; i <= 5; i++)
                 {
                     System.Console.WriteLine("==== times=" + i.ToString("D5"));
 
